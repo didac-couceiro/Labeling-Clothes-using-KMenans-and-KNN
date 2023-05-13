@@ -5,7 +5,6 @@ import numpy as np
 import utils
 import time
 
-
 class KMeans:
 
     def __init__(self, X, K=1, options=None):
@@ -60,18 +59,10 @@ class KMeans:
         if 'fitting' not in options:
             options['fitting'] = 'WCD' # within class distance.
 
-        # If your methods need any other parameter you can add it to the options dictionary
         self.options = options
 
-        #############################################################
-        ##  THIS FUNCTION CAN BE MODIFIED FROM THIS POINT, if needed
-        #############################################################
-
-
     def _init_centroids(self):
-        """
-        Initialization of centroids
-        """
+        
         self.old_centroids = np.zeros((self.K, self.X.shape[1]))
         if self.options['km_init'].lower() == 'first':        
             _, idx = np.unique(self.X, axis=0, return_index=True) #Retorna els index corresponents a files úniques
@@ -96,12 +87,8 @@ class KMeans:
         """
         
         arr = distance(self.X, self.centroids) # N x K
-        #t0 = time.perf_counter()
-        #getLabels = [np.argmin(row) for row in arr] # argmin() retorna l'índex del valor més petit
         getLabels = np.argmin(arr,axis=1)
         self.labels = getLabels
-        
-        #print(f'\n--> GET_LABELS TIME: {time.perf_counter()-t0}')
 
 
     def get_centroids(self):
@@ -127,7 +114,7 @@ class KMeans:
         #.all() comprova que tots els elements compleixin la condició
         #return abs(self.old_centroids - self.centroids).all() <= self.options['tolerance'] # les iteracions es miren a la funció fit
         return np.allclose(self.old_centroids, self.centroids)
- 
+
 
     def fit(self):
         """
@@ -138,23 +125,22 @@ class KMeans:
         while not self.converges() and self.num_iter < self.options['max_iter']:
             self.get_labels()
             self.get_centroids()
-            self.num_iter += 1
-        
-        print(f'\nNUMBER OF FIT ITERATIONS: {self.num_iter}')
+            self.num_iter += 1       
 
-
+   
     def withinClassDistance(self):
-        """
-        returns the within class distance of the current clustering
-        
-        """
-        self.WCD = sum(np.sqrt(np.sum((self.X - self.centroids[self.labels]) ** 2, axis=1)))/self.X.shape[0]
 
+        wcd = 1 #/ self.X.shape[0]
+        for i in range(self.centroids.shape[0]):
+            idxs = np.where(self.labels == i)[0]
+            idx_matrix = self.X[idxs]
+            dist_array = distance(idx_matrix, np.array([self.centroids[i]]))
+            wcd = wcd + np.sum(np.array(list(map(lambda x: x ** 2, list(dist_array)))))
+        self.WCD = wcd / self.X.shape[0]
+        return wcd / self.X.shape[0]
+            
 
     def find_bestK(self, max_K):
-        """
-        sets the best k anlysing the results up to 'max_K' clusters
-        """
 
         self.K = 1
         self.fit()
@@ -171,14 +157,10 @@ class KMeans:
             WCDk_1 = WCDk
 
             if 100 - DECk <= 20:
-                self.K = k
-                return k
+                self.K = k - 1
+                return k - 1
             
         self.K = max_K
-
-
-
-
 
 
 def distance(X, C):
@@ -197,7 +179,7 @@ def distance(X, C):
     for idx, centroids in enumerate(C):
         dist[:, idx] = np.power(np.sum((X - centroids) ** 2, axis=1), 1/2) #dist[:,idx] assigna la distancia de cada centroide a una columna
     return dist
-
+    
 
 def get_colors(centroids):
     """
@@ -211,7 +193,3 @@ def get_colors(centroids):
     colorProb = utils.get_color_prob(centroids) # retorna matriu K x 11 on cada columna és P(color)
     idx = np.argmax(colorProb,axis=1) # array de K valors on hi ha els índexs amb probabilitat més alta
     return utils.colors[idx] # Agafem els colors corresponents als índexs
-
-def euclidean_dist(x1,x2):
-    return np.sqrt(np.sum((x1-x2)**2)) 
-
