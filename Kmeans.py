@@ -19,10 +19,6 @@ class KMeans:
         self._init_X(X)
         self._init_options(options)  # DICT options
 
-    #############################################################
-    ##  THIS FUNCTION CAN BE MODIFIED FROM THIS POINT, if needed
-    #############################################################
-
     def _init_X(self, X):
         """Initialization of all pixels, sets X as an array of data in vector form (PxD)
             Args:
@@ -129,7 +125,9 @@ class KMeans:
 
    
     def withinClassDistance(self):
-
+        """
+        returns the within class distance of the current clustering        
+        """
         wcd = 1 #/ self.X.shape[0]
         for i in range(self.centroids.shape[0]):
             idxs = np.where(self.labels == i)[0]
@@ -141,7 +139,9 @@ class KMeans:
             
 
     def find_bestK(self, max_K):
-
+        """
+        sets the best k anlysing the results up to 'max_K' clusters
+        """
         self.K = 1
         self.fit()
         self.withinClassDistance()
