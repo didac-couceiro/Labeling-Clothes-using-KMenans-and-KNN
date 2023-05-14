@@ -34,7 +34,7 @@ class KMeans:
             X = X.reshape([ncols*nrows, 3])
             self.X = X
             return X 
-        #TODO: mirar què fer en el else
+
 
     def _init_options(self, options=None):
         """
@@ -78,7 +78,8 @@ class KMeans:
         
 
     def get_labels(self):
-        """        Calculates the closest centroid of all points in X
+        """        
+        Calculates the closest centroid of all points in X
         and assigns each point to the closest centroid
         """
         
@@ -128,39 +129,46 @@ class KMeans:
         """
         returns the within class distance of the current clustering        
         """
-        wcd = 1 #/ self.X.shape[0]
-        for i in range(self.centroids.shape[0]):
-            idxs = np.where(self.labels == i)[0]
+        wcd = 0
+        for i, centroid in enumerate(self.centroids):
+            idxs = np.where(self.labels == i)[0] #Choose the indexes of the i-th cluster 
             idx_matrix = self.X[idxs]
-            dist_array = distance(idx_matrix, np.array([self.centroids[i]]))
-            wcd = wcd + np.sum(np.array(list(map(lambda x: x ** 2, list(dist_array)))))
-        self.WCD = wcd / self.X.shape[0]
-        return wcd / self.X.shape[0]
+            dist_array = distance(idx_matrix, np.array([centroid])) #Calculate the distance from the centroid
+            wcd += np.sum(dist_array ** 2)
+        self.WCD = wcd / self.X.shape[0] #Compute the averge of each WCD from each cluster
+        return self.WCD
             
 
     def find_bestK(self, max_K):
         """
         sets the best k anlysing the results up to 'max_K' clusters
         """
-        self.K = 1
-        self.fit()
-        self.withinClassDistance()
-        WCDk_1 = self.WCD
-
-        for k in range(2,max_K+1):
-            self.K = k
+        if self.options['fitting'] == 'WCD':
+            self.K = 1
             self.fit()
             self.withinClassDistance()
-            WCDk = self.WCD
+            WCDk_1 = self.WCD
 
-            DECk = 100*WCDk/WCDk_1
-            WCDk_1 = WCDk
+            for k in range(2,max_K+1):
+                self.K = k
+                self.fit()
+                self.withinClassDistance()
+                WCDk = self.WCD
 
-            if 100 - DECk <= 20:
-                self.K = k - 1
-                return k - 1
-            
-        self.K = max_K
+                DECk = WCDk/WCDk_1
+                WCDk_1 = WCDk
+
+                if 1 - DECk <= 0.2:
+                    self.K = k - 1
+                    return k - 1
+                
+            self.K = max_K
+
+        if self.options['fitting'] == 'Silhouette':
+            pass
+
+        if self.options['fitting'] == 'Fisher Ratio':
+            pass
 
 
 def distance(X, C):
