@@ -73,7 +73,7 @@ class KMeans:
             random_idx = np.random.choice(self.X.shape[0], size=self.K, replace=False) #agafem K files aleatòries sense repetició
             self.centroids = self.X[random_idx]
 
-        elif self.options['km_init'].lower() == 'custom': #TODO amb la diagonal de l'hipercub
+        elif self.options['km_init'].lower() == 'custom': 
             pass
         
 
@@ -148,6 +148,7 @@ class KMeans:
             ICD += np.sum(dist**2)
         self.ICD = ICD
     
+
     def fisher_discriminant(self):
         self.fisher_discriminant = self.withinClassDistance()/self.inter_classDistance()
 
@@ -180,9 +181,15 @@ class KMeans:
         if self.options['fitting'] == 'Silhouette':
             pass
 
-        if self.options['fitting'] == 'Fisher Ratio':
-            pass
-
+        if self.options['fitting'] == 'Fisher Coefficient':
+            fisher_coefs = []
+            for k in range(2, max_K + 1):
+                self.K = k
+                self.fit()
+                fisher_coefs.append(self.fisher_discriminant())
+            
+            self.K = np.argmin(fisher_coefs) + 2
+            return self.K
 
 def distance(X, C):
     """
