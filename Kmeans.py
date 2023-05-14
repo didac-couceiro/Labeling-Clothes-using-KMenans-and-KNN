@@ -53,7 +53,7 @@ class KMeans:
         if 'max_iter' not in options:
             options['max_iter'] = np.inf
         if 'fitting' not in options:
-            options['fitting'] = 'WCD' # within class distance.
+            options['fitting'] = 'Fisher Coefficient' # within class distance.
 
         self.options = options
 
@@ -150,7 +150,9 @@ class KMeans:
     
 
     def fisher_discriminant(self):
-        self.fisher_discriminant = self.withinClassDistance()/self.inter_classDistance()
+        self.withinClassDistance()
+        self.inter_classDistance()
+        self.FD = self.WCD/self.ICD
 
 
     def find_bestK(self, max_K):
@@ -186,10 +188,12 @@ class KMeans:
             for k in range(2, max_K + 1):
                 self.K = k
                 self.fit()
-                fisher_coefs.append(self.fisher_discriminant())
-            
+                self.fisher_discriminant()
+                fisher_coefs.append(self.FD)
+            print(fisher_coefs)
             self.K = np.argmin(fisher_coefs) + 2
             return self.K
+        
 
 def distance(X, C):
     """
