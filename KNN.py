@@ -6,14 +6,15 @@ import math
 import operator
 from scipy.spatial.distance import cdist
 
-
+#Mahalanobis, Euclidean
 class KNN:
-    def __init__(self, train_data, labels):
+    def __init__(self, train_data, labels, distance = 'Mahalanobis'):
         self._init_train(train_data)
         self.labels = np.array(labels)
         #############################################################
         ##  THIS FUNCTION CAN BE MODIFIED FROM THIS POINT, if needed
         #############################################################
+        self.distance = distance #Euclidean or Mahanalobis
 
     def _init_train(self, train_data):
         """
@@ -45,11 +46,14 @@ class KNN:
         ##  AND CHANGE FOR YOUR OWN CODE
         #######################################################
         self.test_data = test_data.reshape((test_data.shape[0], np.prod(test_data.shape[1:])))
+        if self.distance == 'Euclidean':
+            Mdist = cdist(self.test_data,self.train_data)
+
+        elif self.distance == 'Mahalanobis':
+            pass
         
-        Mdist = cdist(self.test_data,self.train_data)
         indx = np.argsort(Mdist,axis=1)        
         self.neighbors = self.labels[indx[:,:k]] #Agafa les primers k columnes
-
 
 
 
@@ -65,7 +69,7 @@ class KNN:
         ##  YOU MUST REMOVE THE REST OF THE CODE OF THIS FUNCTION
         ##  AND CHANGE FOR YOUR OWN CODE
         #######################################################
-        
+     
         values = []
         percentage = []
         k = len(self.neighbors[0])
@@ -78,6 +82,9 @@ class KNN:
             percentage.append(np.max(first_count)/k)
         
         return values
+
+
+
 
     def predict(self, test_data, k):
         """
