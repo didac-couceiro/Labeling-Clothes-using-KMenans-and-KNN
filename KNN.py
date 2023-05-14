@@ -31,8 +31,6 @@ class KNN:
             self.train_data.astype(float)
         
 
-        
-
     def get_k_neighbours(self, test_data, k):
         """
         given a test_data matrix calculates de k nearest neighbours at each point (row) of test_data on self.neighbors
@@ -54,7 +52,6 @@ class KNN:
         
         indx = np.argsort(Mdist,axis=1)        
         self.neighbors = self.labels[indx[:,:k]] #Agafa les primers k columnes
-
 
 
     def get_class(self):
@@ -82,8 +79,6 @@ class KNN:
             percentage.append(np.max(first_count)/k)
         
         return values
-
-
 
 
     def predict(self, test_data, k):
