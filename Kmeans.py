@@ -129,15 +129,28 @@ class KMeans:
         """
         returns the within class distance of the current clustering        
         """
-        wcd = 0
+        WCD = 0
         for i, centroid in enumerate(self.centroids):
             idxs = np.where(self.labels == i)[0] #Choose the indexes of the i-th cluster 
             idx_matrix = self.X[idxs]
             dist_array = distance(idx_matrix, np.array([centroid])) #Calculate the distance from the centroid
-            wcd += np.sum(dist_array ** 2)
-        self.WCD = wcd / self.X.shape[0] #Compute the averge of each WCD from each cluster
-        return self.WCD
-            
+            WCD += np.sum(dist_array ** 2)
+        self.WCD = WCD / self.X.shape[0] #Compute the averge of each WCD from each cluster
+
+    
+    def inter_classDistance(self):
+        """
+        returns the inter-class distance of all the clusters by computing the mean of all centroids
+        """
+        ICD = 0
+        for centroid in self.centroids:
+            dist = distance(np.array([centroid]), self.centroids)
+            ICD += np.sum(dist**2)
+        self.ICD = ICD
+    
+    def fisher_discriminant(self):
+        self.fisher_discriminant = self.withinClassDistance()/self.inter_classDistance()
+
 
     def find_bestK(self, max_K):
         """
