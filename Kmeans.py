@@ -3,8 +3,7 @@ __group__ = 'Grup09'
 
 import numpy as np
 import utils
-import time
-
+from scipy.spatial.distance import cdist
 class KMeans:
 
     def __init__(self, X, K=1, options=None):
@@ -152,14 +151,35 @@ class KMeans:
         for centroid in self.centroids:
             dist = distance(np.array([centroid]), self.centroids)
             ICD += np.sum(dist**2)
-        self.ICD = ICD / self.X.shape[0]
+        self.ICD = ICD/self.X.shape[0]
     
 
     def fisher_discriminant(self):
+        """
+        Computes Fisher's Discriminant
+        """
         self.withinClassDistance()
         self.inter_classDistance()
         self.FD = self.WCD/self.ICD
+    
+    def silhouette_method(self):
+        S = []
+        for idx, point in enumerate(self.X):
+            centroid = self.labels[idx]
+            idxs = np.where(self.labels == centroid)[0] 
+            cent = self.X[idxs] #Matrix that contains all centroids except the one that belongs to the actual point
+            a_i = np.mean(cdist(np.array([point]), cent),axis=1)[0]
 
+            centrs = np.concatenate((self.centroids[:centroid], self.centroids[centroid+1:]))
+            closest_centroid = cdist(np.array([point]), centrs)[0]
+            closest_centroid = np.argmin(closest_centroid) #Agafem el centroide més proper al punt
+
+            idxs = np.where(self.labels == closest_centroid)[0]  
+            rest = self.X[idxs] #Matrix that contains all points except the centroid the actual point belongs to
+            b_i = np.mean(cdist(np.array([point]), rest),axis=1)[0]
+
+            S.append((b_i-a_i)/np.max([a_i,b_i]))
+        self.SM = np.mean(np.array(S))
 
     def find_bestK(self, max_K):
         """
@@ -187,17 +207,14 @@ class KMeans:
             self.K = max_K
 
         if self.options['fitting'] == 'Silhouette':
-            pass
-
-        if self.options['fitting'] == 'Fisher Coefficient':
-            fisher_coefs = []
-            for k in range(2, max_K + 1):
+            ks = []
+            for k in range(2, max_K +1):
                 self.K = k
                 self.fit()
-                self.fisher_discriminant()
-                fisher_coefs.append(self.FD)
-            self.K = np.argmin(fisher_coefs) + 2
-            return self.K
+                self.silhouette_method()
+                ks.append(self.SM)
+            
+            self.K = np.argmax(ks) + 2
         
 
 def distance(X, C):
