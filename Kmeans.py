@@ -20,7 +20,8 @@ class KMeans:
         self._init_options(options)  # DICT options
 
     def _init_X(self, X):
-        """Initialization of all pixels, sets X as an array of data in vector form (PxD)
+        """
+        Initialization of all pixels, sets X as an array of data in vector form (PxD)
             Args:
                 X (list or np.array): list(matrix) of all pixel values
                     if matrix has more than 2 dimensions, the dimensionality of the sample space is the length of
@@ -28,12 +29,11 @@ class KMeans:
         """
         if not X.dtype == float: 
             X = X.astype(float)
-
         if len(X.shape) == 3:
             ncols, nrows, _ = X.shape
             X = X.reshape([ncols*nrows, 3])
-            self.X = X
-            return X 
+        self.X = X
+             
 
 
     def _init_options(self, options=None):
@@ -53,7 +53,7 @@ class KMeans:
         if 'max_iter' not in options:
             options['max_iter'] = np.inf
         if 'fitting' not in options:
-            options['fitting'] = 'Fisher Coefficient' # within class distance.
+            options['fitting'] = 'WCD' # within class distance.
 
         self.options = options
 
@@ -73,9 +73,15 @@ class KMeans:
             random_idx = np.random.choice(self.X.shape[0], size=self.K, replace=False) #agafem K files aleatòries sense repetició
             self.centroids = self.X[random_idx]
 
-        elif self.options['km_init'].lower() == 'custom': 
-            pass
-        
+        elif self.options['km_init'].lower() == 'custom' or self.options['km_init'].lower() == 'kmeans++': 
+            _, idx = np.unique(self.X, axis=0, return_index=True)
+            idx = np.sort(idx)  
+            unique = self.X[idx]
+            random_idx = np.random.choice(self.X.shape[0], size=1, replace=False) 
+            first_centroid = self.X[random_idx] #Choose the first centroid randomly
+
+
+
 
     def get_labels(self):
         """        
@@ -146,7 +152,7 @@ class KMeans:
         for centroid in self.centroids:
             dist = distance(np.array([centroid]), self.centroids)
             ICD += np.sum(dist**2)
-        self.ICD = ICD
+        self.ICD = ICD / self.X.shape[0]
     
 
     def fisher_discriminant(self):
@@ -165,7 +171,7 @@ class KMeans:
             self.withinClassDistance()
             WCDk_1 = self.WCD
 
-            for k in range(2,max_K+1):
+            for k in range(2, max_K+1):
                 self.K = k
                 self.fit()
                 self.withinClassDistance()
@@ -190,7 +196,6 @@ class KMeans:
                 self.fit()
                 self.fisher_discriminant()
                 fisher_coefs.append(self.FD)
-            print(fisher_coefs)
             self.K = np.argmin(fisher_coefs) + 2
             return self.K
         

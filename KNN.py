@@ -8,7 +8,7 @@ from scipy.spatial.distance import cdist
 
 #Mahalanobis, Euclidean
 class KNN:
-    def __init__(self, train_data, labels, distance = 'Mahalanobis'):
+    def __init__(self, train_data, labels, distance = 'Euclidean'):
         self._init_train(train_data)
         self.labels = np.array(labels)
         #############################################################
