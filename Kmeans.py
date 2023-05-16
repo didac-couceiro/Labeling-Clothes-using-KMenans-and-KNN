@@ -206,7 +206,49 @@ class KMeans:
                 
             self.K = max_K
 
-        if self.options['fitting'] == 'Silhouette':
+        elif self.options['fitting'] == 'Fisher Discriminant':
+            self.K = 1
+            self.fit()
+            self.fisher_discriminant()
+            WCDk_1 = self.FD
+
+            for k in range(2, max_K+1):
+                self.K = k
+                self.fit()
+                self.fisher_discriminant()
+                WCDk = self.FD
+
+                DECk = WCDk/WCDk_1
+                WCDk_1 = WCDk
+
+                if 1 - DECk <= 0.2:
+                    self.K = k - 1
+                    return k - 1
+                
+            self.K = max_K
+
+        elif self.options['fitting'] == 'Inter-Class':
+            self.K = 1
+            self.fit()
+            self.inter_classDistance()
+            WCDk_1 = self.ICD
+
+            for k in range(2, max_K+1):
+                self.K = k
+                self.fit()
+                self.inter_classDistance()
+                WCDk = self.ICD
+
+                DECk = WCDk/WCDk_1
+                WCDk_1 = WCDk
+
+                if 1 - DECk >= 0.2:
+                    self.K = k - 1
+                    return k - 1
+                
+            self.K = max_K
+
+        elif self.options['fitting'] == 'Silhouette':
             ks = []
             for k in range(2, max_K +1):
                 self.K = k
