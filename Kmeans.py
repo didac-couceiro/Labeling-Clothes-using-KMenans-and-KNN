@@ -73,13 +73,17 @@ class KMeans:
             self.centroids = self.X[random_idx]
 
         elif self.options['km_init'].lower() == 'custom' or self.options['km_init'].lower() == 'kmeans++': 
-            _, idx = np.unique(self.X, axis=0, return_index=True)
-            idx = np.sort(idx)  
-            unique = self.X[idx]
-            random_idx = np.random.choice(self.X.shape[0], size=1, replace=False) 
-            first_centroid = self.X[random_idx] #Choose the first centroid randomly
+            centroids = np.zeros((self.K, self.X.shape[1]))
+            centroids[0] = self.X[np.random.choice(self.X.shape[0], size=1, replace=False)]
 
+            for i in range(1, self.K):
+                distances = np.zeros(self.X.shape[0])
+                for j in range(self.X.shape[0]):
+                    distances[j] = np.min([np.linalg.norm(self.X[j] - centroids[k]) ** 2 for k in range(i)])
+                probabilities = distances / np.sum(distances)
+                centroids[i] = self.X[np.random.choice(self.X.shape[0], size=1, p=probabilities)]
 
+            self.centroids = centroids
 
 
     def get_labels(self):
