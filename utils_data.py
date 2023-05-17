@@ -150,9 +150,11 @@ def Plot3DCloud(km, rows=1, cols=1, spl_id=1):
 
     for k in range(km.K):
         Xl = km.X[km.labels == k, :]
+        #ax.scatter(
+        #    Xl[:, 0], Xl[:, 1], Xl[:, 2], marker='.', c=km.centroids[np.ones((Xl.shape[0]), dtype='int') * k, :] / 255
+        #)
         ax.scatter(
-            Xl[:, 0], Xl[:, 1], Xl[:, 2], marker='.', c=km.centroids[np.ones((Xl.shape[0]), dtype='int') * k, :] / 255
-        )
+            Xl[:, 0], Xl[:, 1], Xl[:, 2], marker='.')
 
     plt.xlabel('dim 1')
     plt.ylabel('dim 2')
@@ -186,3 +188,20 @@ def visualize_k_means(kmeans, img_shape):
     Plot3DCloud(kmeans, 1, 3, 3)
     plt.title('núvol de punts')
     plt.show()
+
+def visualize_init_centroid(km,rows=1, cols=1, spl_id=1):
+    ax = plt.gcf().add_subplot(rows, cols, spl_id, projection='3d')
+    """
+    for k in range(km.K):
+        Xl = km.X[km.labels == k, :]
+        ax.scatter(
+            Xl[:, 0], Xl[:, 1], Xl[:, 2], marker='.')
+    """
+    #ax.scatter(km.centroids[:,0],km.centroids[:,1],km.centroids[:,2], marker='.', s=100,c='red')
+    ax.scatter(km.X[:,0], km.X[:,1], km.X[:,2], marker='.')
+    
+
+    plt.xlabel('dim 1')
+    plt.ylabel('dim 2')
+    ax.set_zlabel('dim 3')
+    return ax
