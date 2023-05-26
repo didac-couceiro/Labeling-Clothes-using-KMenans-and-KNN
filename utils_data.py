@@ -197,8 +197,8 @@ def visualize_init_centroid(km,rows=1, cols=1, spl_id=1):
         ax.scatter(
             Xl[:, 0], Xl[:, 1], Xl[:, 2], marker='.')
     """
-    #ax.scatter(km.centroids[:,0],km.centroids[:,1],km.centroids[:,2], marker='.', s=100,c='red')
-    ax.scatter(km.X[:,0], km.X[:,1], km.X[:,2], marker='.')
+    ax.scatter(km.centroids[:,0],km.centroids[:,1],km.centroids[:,2], marker='.', s=100,c='red')
+    #ax.scatter(km.X[:,0], km.X[:,1], km.X[:,2], marker='.')
     
 
     plt.xlabel('dim 1')
