@@ -3,7 +3,10 @@ __group__ = 'Grup09'
 
 import numpy as np
 import utils
+from utils_data import visualize_init_centroid, visualize_k_means
+import random
 from scipy.spatial.distance import cdist
+import matplotlib.pyplot as plt
 class KMeans:
 
     def __init__(self, X, K=1, options=None):
@@ -64,13 +67,13 @@ class KMeans:
             idx = np.sort(idx) #els ordenem per obtenir les files en l'ordre original
             unique = self.X[idx] # agafem les files que ens interessen
             self.centroids = unique[:self.K]
-        
+      
         elif self.options['km_init'].lower() == 'random':
             _, idx = np.unique(self.X, axis=0, return_index=True)
             idx = np.sort(idx)  
             unique = self.X[idx]
-            random_idx = np.random.choice(self.X.shape[0], size=self.K, replace=False) #agafem K files aleatòries sense repetició
-            self.centroids = self.X[random_idx]
+            random_idx = np.random.permutation(unique)
+            self.centroids = random_idx[:self.K]
 
         elif self.options['km_init'].lower() == 'custom' or self.options['km_init'].lower() == 'kmeans++': 
             centroids = np.zeros((self.K, self.X.shape[1]))
@@ -293,3 +296,79 @@ def get_colors(centroids):
     colorProb = utils.get_color_prob(centroids) # retorna matriu K x 11 on cada columna és P(color)
     idx = np.argmax(colorProb,axis=1) # array de K valors on hi ha els índexs amb probabilitat més alta
     return utils.colors[idx] # Agafem els colors corresponents als índexs
+
+def WCD_best(km, Kmax):
+    y = []
+    ks = []
+    for k in range(2,Kmax):
+        km.K = k
+        km.fit()
+        km.withinClassDistance()
+        ks.append(k)
+        y.append(km.WCD)
+    plt.title("Intra-Class (WCD")
+    plt.xlabel("K")
+    plt.ylabel("Score")
+    plt.plot(ks,y,label = "Intra-Class")
+    plt.grid()
+    plt.legend()
+    plt.show()
+
+
+def FD_best(km, Kmax):
+    y = []
+    ks = []
+    for k in range(2,Kmax):
+        km.K = k
+        km.fit()
+        km.fisher_discriminant()
+        ks.append(k)
+        y.append(km.FD)
+    plt.xlabel("K")
+    plt.ylabel("Score")
+    plt.title("Fisher Discriminant")
+    plt.plot(ks,y, label = "Fisher Discriminant")
+    plt.grid()
+    plt.show()
+
+def InterC_best(km, Kmax):
+    y = []
+    ks = []
+    for k in range(2,Kmax):
+        km.K = k
+        km.fit()
+        km.inter_classDistance()
+        ks.append(k)
+        y.append(km.ICD)
+    plt.title("Inter-Class")
+    plt.xlabel("K")
+    plt.ylabel("Score")
+    plt.plot(ks,y,label = "Inter-Class")
+    plt.grid()
+    plt.show()
+
+
+def best_Silhouette(km, Kmax):
+    y = []
+    ks = []
+    for k in range(2,Kmax):
+        km.K = k
+        km.fit()
+        km.silhouette_method()
+        ks.append(k)
+        y.append(km.SM)
+
+    plt.title("Silhouette Method")
+    plt.xlabel("K")
+    plt.ylabel("Score")
+    plt.plot(ks,y,label = "Silhouette Method")
+    plt.grid()
+    plt.show()
+
+def Get_color_accuracy(kmeans_labels, ground_truth):
+    accuracy = 0
+    for label,truth in zip(kmeans_labels,ground_truth):
+        accuracy += len(np.intersect1d(label,truth))/(max(len(label),len(truth)))
+    return (accuracy/len(kmeans_labels))*100
+
+
