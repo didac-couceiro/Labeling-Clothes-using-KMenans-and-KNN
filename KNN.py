@@ -47,8 +47,34 @@ class KNN:
         if self.distance == 'Euclidean':
             Mdist = cdist(self.test_data,self.train_data)
 
-        elif self.distance == 'Mahalanobis':
-            pass
+        elif self.distance == 'Mahalanobis': #reduir el tamany del train_data perque peta al fer la inversa
+            C = np.cov(self.train_data, rowvar=False)
+            C = np.linalg.inv(C)
+            Mdist = cdist(self.test_data,self.train_data, metric='mahalanobis', VI = C)
+        
+        elif self.distance == 'Cosine Similarity': #Basat en la similitud de les característiques no en les distàncies com a tal
+            self.test_data = self.test_data / np.linalg.norm(self.test_data, axis = 1, keepdims=True)
+            self.train_data = self.train_data / np.linalg.norm(self.train_data, axis = 1, keepdims=True)
+            Mdist = 1 - cdist(self.test_data, self.train_data, metric='cosine')
+            indx = np.argsort(Mdist,axis=1)
+            self.neighbors = self.labels[indx[:,-k:]] #últimes k columnes (més altes)
+            return 0
+        
+        elif self.distance == 'Jaccard':
+            Mdist = 1 - cdist(self.test_data, self.train_data, metric = jaccard_distance)
+            indx = np.argsort(Mdist,axis=1)
+            self.neighbors = self.labels[indx[:,-k:]] #últimes k columnes (més altes)
+            return 0
+        
+        elif self.distance == 'Canberra':
+            Mdist = cdist(self.test_data, self.train_data, metric = canberra_distance)
+        
+        elif self.distance == 'Manhattan':
+            Mdist = cdist(self.test_data, self.train_data, metric = 'cityblock')
+        
+        elif self.distance == 'Chebyshev':
+            Mdist = cdist(self.test_data, self.train_data, metric = chebyshev_distance)
+
         
         indx = np.argsort(Mdist,axis=1)        
         self.neighbors = self.labels[indx[:,:k]] #Agafa les primers k columnes
@@ -91,3 +117,17 @@ class KNN:
 
         self.get_k_neighbours(test_data, k)
         return self.get_class()
+
+
+def jaccard_distance(u, v):
+    intersection = np.sum(np.minimum(u, v))
+    union = np.sum(np.maximum(u, v))
+    return 1.0 - intersection / union
+
+def canberra_distance(u, v):
+    numerator = np.abs(u - v)
+    denominator = np.abs(u) + np.abs(v)
+    return np.sum(numerator / denominator)
+
+def chebyshev_distance(u, v):
+    return np.max(np.abs(u - v))
