@@ -1,14 +1,13 @@
-_authors_ = 'TO_BE_FILLED'
-_group_ = 'TO_BE_FILLED'
+__authors__ = 'TO_BE_FILLED'
+__group__ = 'TO_BE_FILLED'
 
 import numpy as np
+from Kmeans import*
 import matplotlib.pyplot as plt
-from utils_data import read_dataset, read_extended_dataset, crop_images, Plot3DCloud
+from utils_data import read_dataset, read_extended_dataset, crop_images, visualize_retrieval, Plot3DCloud
 import time as time
 from KNN import*
-from Kmeans import *
 from scipy.stats import mode
-
 
 if __name__ == '__main__':
 
@@ -78,7 +77,10 @@ def Get_color_accuracy(kmeans_labels, ground_truth):
         maxim =(max(len(np.unique(pred)), len(real)))
         porc+= inter / maxim
     return (porc / len(kmeans_labels)) * 100
+
+
 """
+prova pel get color accuracy
 colors = []
 for im in imgs:
     km = KMeans(im, 5)
@@ -86,7 +88,187 @@ for im in imgs:
     colors.append(get_colors(km.centroids))
 print('El percentatge obtingut és: '+ str(Get_color_accuracy(colors,color_labels))+'%')
 """
+"""
 #prova pel get shape accuracy
+
+knn = KNN(train_imgs_grey,train_class_labels)
+shapes = knn.predict(test_imgs_grey,4)
+print(shapes[10:20])
+print(test_class_labels[10:20])
+print(str(Get_shape_accuracy(shapes,test_class_labels))+'%')
+"""
+"""
+#prova pel kmean_statistics
+for i, im in enumerate(imgs[:5]):
+    km = KMeans(im,4)
+    Kmean_statistics(km,10)
+"""
+
+def retrieval_by_color(list_images, predicted_colors, search, n):
+        """
+        Args:
+            list_images: dataset of the images, obtained by the ground truth
+            predicted_colors: list of the colors we have obtained after aply the K-means
+            search: colors we want to search in the images
+            n: number of images we want to see
+
+        Return:
+            Return a list of the index that have these colors
+        """
+        indicesToPrint = []
+
+        if type(search) != list: search = [search]
+
+        for index, element in enumerate(predicted_colors):
+            auxList = np.isin(search, element)
+            if np.all(auxList): # check that all the colors we want are in the sample
+                indicesToPrint.append(index)
+
+        random.shuffle(indicesToPrint)
+        imagesGiven = list_images[indicesToPrint]
+        visualize_retrieval(imagesGiven, n)
+        return indicesToPrint
+
+def retrieval_by_shape(list_images, predicted_shapes, search, n):
+    """
+    Args:
+        list_images: dataset of the images, obtained by the ground truth
+        predicted_shapes: list of the shapes we have obtained after aply the KNN
+        search: shape we want to search in the images
+        n: number of images we want to see
+
+    Return:
+        Return a list of the indexs that have these shapes
+    """
+
+    indicesToPrint = []
+
+    for index, element in enumerate(predicted_shapes):
+        if search in element: # check that all the colors we want are in the sample
+            print(index)
+            indicesToPrint.append(index)
+
+    random.shuffle(indicesToPrint)
+    imagesGiven = list_images[indicesToPrint]
+    visualize_retrieval(imagesGiven, n)
+    return imagesGiven
+
+def retrieval_combined(list_images, predicted_colors, predicted_shapes, search_color, search_shape, n):
+    """
+    Args:
+        list_images: dataset of the images, obtained by the ground truth
+        predicted_colors: list of the colors we have obtained after aply the Kmeans
+        predicted_shapes: list of the shapes we have obtained after aply the KNN
+        search_color: colors we want to search in the images
+        search_shapes: shape we want to search in the images
+        n: number of images we want to see
+
+    Return:
+        Return a list of the indexs that have these shapes
+    """
+    indicesColor = []
+    indicesToPrint = []
+
+    for index, color in enumerate(predicted_colors):
+        auxList = np.isin(search_color, color)
+        if np.all(auxList):  # check that all the colors we want are in the sample
+            indicesColor.append(index)
+
+    list_images = np.array(list_images)[indicesColor]
+    predicted_shapes = np.array(predicted_shapes)[indicesColor]
+
+    for index, shape in enumerate(predicted_shapes):
+        if shape in search_shape:
+            indicesToPrint.append(index)
+
+    random.shuffle(indicesToPrint)
+    imagesGiven = list_images[indicesToPrint]
+    visualize_retrieval(imagesGiven, n)
+
+    return indicesToPrint
+
+def retrieval_by_colors_combination(list_images, predicted_colors, search, n, search_type=1):
+    """
+    Args:
+        list_images: dataset of the images, obtained by the ground truth
+        predicted_colors: list of the colors we have obtained after aply the K-means
+        search: combination of colors we want to search in the images
+        search_type: you can choose if you want samples where there is only all this colors
+                    or samples where there are combinations of this colors but there is no need
+                    of all the colors in the same sample.
+                    If search_type = 0, it shows only samples that have all the colors.
+                    If search_type = 1, it shows all the samples that have at least one color ordered
+                    by more colors to less
+                    If search_type = 2, it shows all the samples that have at least one color
+                    ordered randomly
+        n: number of images we want to see
+
+
+    Return:
+        Return a list of the index that have these colors
+    """
+    indicesToPrint = []
+    indicesAux = {}
+
+
+    if type(search) != list: search = [search]
+
+    for index, element in enumerate(predicted_colors):
+        auxList = np.isin(search, element)
+        #if(np.sum(auxList)>1):
+            #print(np.sum(auxList))
+        if np.all(auxList): # check that all the colors we want are in the sample
+            indicesToPrint.append(index)
+
+        elif np.sum(auxList) >= 1 and search_type != 0:
+            if(search_type == 1):
+                key = np.sum(auxList)
+                if key in indicesAux:
+                    indicesAux[key].append(index)
+                else:
+                    indicesAux[key] = [index]
+
+            else:
+                indicesToPrint.append(index)
+
+    if search_type == 1:
+        # Sort the keys in descending order and reverse the order
+        sorted_keys = sorted(indicesAux.keys(), reverse=False)
+        for key in reversed(sorted_keys):
+            list_to_merge = indicesAux[key]
+            for i in list_to_merge:
+                indicesToPrint.append(i)
+
+        imagesGiven = list_images[indicesToPrint]
+        visualize_retrieval(imagesGiven, n)
+    else:
+        random.shuffle(indicesToPrint)
+        imagesGiven = list_images[indicesToPrint]
+        visualize_retrieval(imagesGiven, n)
+
+    return indicesToPrint
+
+
+# load our knn
+knn = KNN(train_imgs, train_class_labels)
+label_results = knn.predict(test_imgs, 6)
+
+# load our kmeans
+colors = []
+for im in test_imgs:
+    km = KMeans(im, 4)
+    km.fit()
+    colors.append(get_colors(km.centroids))
+    # print(get_colors(km.centroids))
+
+# retrieval_by_color(test_imgs, colors, ["Blue"], 10)
+# retrieval_by_color(test_imgs, colors, ["Yellow", "Blue"], 10)
+# retrieval_by_shape(test_imgs, label_results, "Handbags", 10)
+# retrieval_by_shape(test_imgs, label_results, "Dresses", 10)
+# retrieval_combined(test_imgs, colors, label_results, ["Red"], "Handbags",5)
+# retrieval_combined(test_imgs, colors, label_results, ["Blue", "Yellow"], "Flip Flops",5)
+retrieval_by_colors_combination(test_imgs, test_color_labels, ["Blue", "Yellow", "Pink", "Brown", "Orange"], 10, 1)
+
 
 temps = []
 acc = []
@@ -325,4 +507,3 @@ def centroid_comparison():
     k1.fit()
     Plot3DCloud(k1)
     plt.show()
-
